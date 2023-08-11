@@ -1,0 +1,3 @@
+[submodule "pve-docs"]
+	path = pve-docs
+	url = https://git.proxmox.com/git/pve-docs.git
