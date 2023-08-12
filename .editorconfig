@@ -10,6 +10,6 @@ indent_size = 2
 indent_style = tab
 tab_width = 2
 
-[src/**.ts]
+[{src/**.ts,**.yaml}]
 indent_size = 2
 indent_style = space

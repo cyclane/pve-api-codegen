@@ -1,0 +1,38 @@
+name: PVE API CodeGen
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  deno-version: v1.21.x
+
+jobs:
+  check-and-compile:
+    name: Check and Compile pve-api-codegen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.deno-version }}
+
+      - name: Deno fmt
+        run: make fmt-check
+      - name: Deno lint
+        run: make lint
+      - name: Deno check
+        run: make type-check
+      - name: Deno Compile
+        run: make compile
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: pve-api-codegen
+          path: pve-api-codegen
+          if-no-files-found: error
+          retention-days: 14
