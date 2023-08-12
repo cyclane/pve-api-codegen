@@ -3,7 +3,7 @@ name: PVE API CodeGen
 on:
   push:
     branches:
-      - master
+      - main
 
 env:
   deno-version: v1.21.x
