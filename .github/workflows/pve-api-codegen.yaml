@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  deno-version: v1.21.x
+  deno-version: v1.36.x
 
 jobs:
   check-and-compile:
