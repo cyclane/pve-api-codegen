@@ -1,4 +1,4 @@
-export const apiSchema = [
+import { Schema } from "./schema.ts"; export const apiSchema = [
    {
       "children" : [
          {
@@ -52054,6 +52054,6 @@ export const apiSchema = [
       "path" : "/version",
       "text" : "version"
    }
-]
+] as Schema
 ;
 
