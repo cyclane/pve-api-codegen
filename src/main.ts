@@ -2,6 +2,8 @@ import { load } from "./apidata.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { parse } from "./deps.ts";
 
+import go121 from "./generators/go1.21/mod.ts";
+
 const cliArgs = parse(Deno.args, {
   alias: {
     help: ["h"],
@@ -21,7 +23,9 @@ const cliArgs = parse(Deno.args, {
   ],
 });
 
-const codeGenerators: CodeGenerator[] = [];
+const codeGenerators: CodeGenerator[] = [
+  go121
+];
 
 async function existsNotEmpty(path: string): Promise<string | undefined> {
   try {
