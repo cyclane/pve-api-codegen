@@ -29,10 +29,12 @@ jobs:
       - name: Deno Compile
         run: make compile
 
+      - name: Tar binary
+        run: tar -zcvf pve-api-codegen.tar.gz pve-api-codegen
       - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
-          name: pve-api-codegen
-          path: pve-api-codegen
+          name: pve-api-codegen.tar.gz
+          path: pve-api-codegen.tar.gz
           if-no-files-found: error
           retention-days: 14
