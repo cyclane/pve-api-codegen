@@ -1,7 +1,8 @@
 /**
  * Basic array intersection function. ( O(a1.length * a2.length) )
- * @param a1
- * @param a2
+ * @param a1 First array.
+ * @param a2 Second array.
+ * @param fn Intersection function for array elements.
  * @returns Intersection of a1 and 2.
  */
 export function intersectArrays<T>(
@@ -35,16 +36,24 @@ export function stringIntersect(
 }
 
 export interface NameBuilder {
+  /** Add a name to the builder */
   add: (...name: string[]) => NameBuilder;
+  /** Get the name builder as an array */
   all: () => readonly string[];
+  /** Build the name into a string */
   build: () => string;
+  /** Copy the builder and its contents */
   copy: () => NameBuilder;
+  /** Create a new builder using the same `fn` and `joinChar` */
   blank: () => NameBuilder;
+  /** The make name function the builder was created with */
   fn: (name: string) => string;
 }
 
 /**
  * String array with helper functions for building a name array.
+ * @param fn Make name function (used for enforcing case).
+ * @param joinChar Character to join names with in .build() (used for enforcing case).
  * @returns The string array.
  */
 export function newNameBuilder(

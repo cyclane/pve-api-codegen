@@ -1,7 +1,10 @@
 import { intersectArrays, NameBuilder, stringIntersect } from "./utils.ts";
 
+/** Enum represents an enum from the EnumResolver */
 export type Enum = {
+  /** Possible enum values */
   values: string[];
+  /** Final enum name (from resolver) */
   final: Promise<NameBuilder>;
 };
 
@@ -20,6 +23,20 @@ function sortStringsByLength(s1: string, s2: string) {
   return s1.length - s2.length;
 }
 
+export interface EnumResolver {
+  /**
+   * create a new adder function to add enums and block resolution
+   * until adder is closed.
+   * @returns adder function with .close() method.
+   */
+  newAdder: () => EnumAdder;
+  /**
+   * Resolve enum names.
+   * @returns List of enums to generate types for
+   */
+  resolve: () => Promise<Enum[]>;
+}
+
 /**
  * enumResolver helps shorten enum names by inspecting all needed enums
  * and combining any identical ones, using a shorter name.
@@ -28,18 +45,10 @@ function sortStringsByLength(s1: string, s2: string) {
  * also assumes last request name is always unique.
  * @returns newAdder and resolve functions
  */
-export function enumResolver(): {
-  newAdder: () => EnumAdder;
-  resolve: () => Promise<Enum[]>;
-} {
+export function enumResolver(): EnumResolver {
   const enums: InnerEnum[] = [];
   const adderPromises: Promise<unknown>[] = [];
   return {
-    /**
-     * create a new adder function to add enums and block resolution
-     * until adder is closed.
-     * @returns adder function with .close() method.
-     */
     newAdder: () => {
       const adder = async (names: NameBuilder[], values: string[]) => {
         let resolve = function (_: NameBuilder): void {
@@ -64,12 +73,8 @@ export function enumResolver(): {
       );
       return adder;
     },
-    /**
-     * Resolve enum names
-     * @returns List of enums to generate types for
-     */
     resolve: async () => {
-      await Promise.all(adderPromises);
+      await Promise.all(adderPromises); // all adders must close
       const options: Record<string, InnerEnum[]> = {};
       const final: InnerEnum[] = [];
       enums.forEach((e) => {
@@ -100,15 +105,6 @@ export function enumResolver(): {
             break;
           }
         }
-        // const found = opts.map((o) =>
-        //   o.names.map((n) => {
-        //     return {
-        //       opt: o,
-        //       name: n,
-        //     };
-        //   })
-        // ).flat().toSorted((a, b) => a.name.length - b.name.length)
-        //   .find(({ name }) => !taken.has(name))!;
         console.debug(
           `resolved enum ${found.build()} (${opts.length})`,
         );
