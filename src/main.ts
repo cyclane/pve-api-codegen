@@ -9,13 +9,16 @@ const cliArgs = parse(Deno.args, {
     help: ["h"],
     file: ["f"],
     output: ["o"],
+    overwrite: ["O"],
   },
   boolean: [
     "help",
+    "overwrite",
   ],
   default: {
     file: null,
     output: null,
+    overwrite: false,
   },
   string: [
     "file",
@@ -24,7 +27,7 @@ const cliArgs = parse(Deno.args, {
 });
 
 const codeGenerators: CodeGenerator[] = [
-  go121
+  go121,
 ];
 
 async function existsNotEmpty(path: string): Promise<string | undefined> {
@@ -56,12 +59,14 @@ Example: pve-api-codegen -o ./go/ go1.21 github.com/cyclane/pve-go
 Options:
   -h, --help
          Show this message
-  -f, --file
+  -f, --file [file]
          apidata.js file to use
          Default: <bundled apidata.js file>
-  -o, --output
+  -o, --output [destination]
          The destination directory for the generated library.
          Default: [language]/
+  -O, --overwrite
+         Overwrite existing files instead of erroring.
 
 Available Languages:
 ${
@@ -80,7 +85,7 @@ ${
   }
   const destination = args.output || language + "/";
   const existsNotEmptyMessage = await existsNotEmpty(destination);
-  if (existsNotEmptyMessage) {
+  if (existsNotEmptyMessage && !args.overwrite) {
     console.error(existsNotEmptyMessage);
     return 1;
   }

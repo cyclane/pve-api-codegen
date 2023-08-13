@@ -11,19 +11,21 @@ export type Child = {
 export type HTTPMethod = "GET" | "POST" | "DELETE" | "PUT";
 
 export type ChildInfo = {
-  [method in HTTPMethod]?: {
-    allowtoken: number;
-    description: string;
-    method: string;
-    name: string;
-    parameters: {
-      additionalProperties: number;
-    } & Properties;
-    permissions?: unknown;
-    protected?: number;
-    proxyto?: "node" | null;
-    returns: Properties;
-  };
+  [method in HTTPMethod]?: Endpoint<method>;
+};
+
+export type Endpoint<method extends HTTPMethod> = {
+  allowtoken: number;
+  description: string;
+  method: method;
+  name: string;
+  parameters: {
+    additionalProperties: number;
+  } & Properties;
+  permissions?: unknown;
+  protected?: number;
+  proxyto?: "node" | null;
+  returns: Properties;
 };
 
 export type Properties =
@@ -38,7 +40,7 @@ export type Properties =
   & ({
     type?: "object";
     properties?: {
-      [key: string]: { children: Properties } | Properties;
+      [key: string]: Properties;
     };
   } | {
     type: "null";
