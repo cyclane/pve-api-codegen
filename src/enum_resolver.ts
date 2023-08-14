@@ -91,7 +91,7 @@ export function enumResolver(): EnumResolver {
         // default to shortest element from priority that all optionas have.
         let found = opts.map((o) => o.names[minLength - 1])
           .toSorted(
-            (a, b) => sortStringsByLength(a.build(), b.build())
+            (a, b) => sortStringsByLength(a.build(), b.build()),
           )[0].copy();
         for (let i = 0; i < minLength; i++) {
           let req = opts[0].names[i];

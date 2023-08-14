@@ -28,7 +28,7 @@ export function intersectArrays<T>(
 
 export function stringIntersect(
   s1: string,
-  s2: string
+  s2: string,
 ) {
   if (s2.includes(s1)) return s1;
   if (s1.includes(s2)) return s2;
@@ -36,8 +36,10 @@ export function stringIntersect(
 }
 
 export interface NameBuilder {
-  /** Add a name to the builder */
-  add: (...name: string[]) => NameBuilder;
+  /** Add name(s) to the builder */
+  add: (...names: string[]) => NameBuilder;
+  /** Insert name(s) at a position to the builder */
+  insert: (n: number, ...names: string[]) => NameBuilder;
   /** Get the name builder as an array */
   all: () => readonly string[];
   /** Build the name into a string */
@@ -46,8 +48,21 @@ export interface NameBuilder {
   copy: () => NameBuilder;
   /** Create a new builder using the same `fn` and `joinChar` */
   blank: () => NameBuilder;
-  /** The make name function the builder was created with */
-  fn: (name: string) => string;
+  /**
+   * Cleanup a builder from any parameters
+   * @returns A fullName (including parameters) and baseName (no parameters)
+   */
+  cleanup: () => { fullName: NameBuilder; baseName: NameBuilder };
+}
+
+function sanitiseNames(names: string[]) {
+  return names.map((n) => {
+    if (n.match(/^\{[^\{\}]+\}$/)) { // match parameter
+      // do not split or clean parameters just yet
+      return n;
+    }
+    return n.split(/[^a-zA-Z0-9]/);
+  }).flat().filter((n) => n);
 }
 
 /**
@@ -57,29 +72,58 @@ export interface NameBuilder {
  * @returns The string array.
  */
 export function newNameBuilder(
-  fn: NameBuilder["fn"],
+  fn: (name: string) => string,
   joinChar: string,
 ): NameBuilder {
-  const names: string[] = [];
+  let names: string[] = [];
   const builder = {
     add: (...name: string[]) => {
       names.push(
-        ...name.map((n) => {
-          if (n.match(/^\{[^\{\}]+\}$/)) { // match parameter
-            // do not split or clean parameters just yet
-            return n;
-          }
-          return n.split(/[^a-zA-Z0-9]/);
-        }
-        ).flat().filter((n) => n)
+        ...sanitiseNames(name),
       );
+      return builder;
+    },
+    insert: (n: number, ...name: string[]) => {
+      names = [...names.slice(0, n), ...sanitiseNames(name), ...names.slice(n)];
       return builder;
     },
     all: () => names as readonly string[],
     build: () => names.map(fn).join(joinChar),
     copy: () => newNameBuilder(fn, joinChar).add(...names),
     blank: () => newNameBuilder(fn, joinChar),
-    fn,
+    cleanup: () => {
+      const fullName: string[] = [];
+      const baseName: string[] = [];
+      const plurifyBlacklist = ["dns", "mds", "fs", "zfs"];
+      let lastIsParameter = false;
+      for (const n of names) {
+        if (n.match(/^\{[^\{\}]+\}$/)) { // match parameter
+          const last = fullName[fullName.length - 1];
+          if (
+            !lastIsParameter && last.slice(-1)[0] === "s" &&
+            !plurifyBlacklist.includes(last)
+          ) {
+            // shorten plural and do not include parameter
+            fullName[fullName.length - 1] = deplurify(last);
+            if (baseName[baseName.length - 1] === last) {
+              baseName[baseName.length - 1] = deplurify(last);
+            }
+          } else {
+            // otherwise add "By" for name to make more sense
+            fullName.push("by", fn(n).slice(1, -1));
+          }
+          lastIsParameter = true;
+        } else { // non-parameters
+          baseName.push(n);
+          fullName.push(n);
+          lastIsParameter = false;
+        }
+      }
+      return {
+        fullName: builder.blank().add(...fullName),
+        baseName: builder.blank().add(...baseName),
+      };
+    },
   };
   return builder;
 }
@@ -113,47 +157,4 @@ function deplurify(word: string) {
       }
       return word.slice(0, -1);
   }
-}
-
-/**
- * Cleanup a name.
- * @param name Name to cleanup.
- * @param method HTTP method to include in full name.
- * @returns A full name (parameters are included) and a base name (parameters are not included).
- */
-export function cleanupName(name: NameBuilder, method: string): {
-  fullName: NameBuilder;
-  baseName: NameBuilder;
-} {
-  const fullName: string[] = [method.toLowerCase()];
-  const baseName: string[] = [];
-  const plurifyBlacklist = ["dns", "mds", "fs", "zfs"];
-  let lastIsParameter = false;
-  for (const n of name.all()) {
-    if (n.match(/^\{[^\{\}]+\}$/)) { // match parameter
-      const last = fullName[fullName.length - 1];
-      if (
-        !lastIsParameter && last.slice(-1)[0] === "s" &&
-        !plurifyBlacklist.includes(last)
-      ) {
-        // shorten plural and do not include parameter
-        fullName[fullName.length - 1] = deplurify(last);
-        if (baseName[baseName.length - 1] === last) {
-          baseName[baseName.length - 1] = deplurify(last);
-        }
-      } else {
-        // otherwise add "By" for name to make more sense
-        fullName.push("by", name.fn(n).slice(1, -1));
-      }
-      lastIsParameter = true;
-    } else { // non-parameters
-      baseName.push(n);
-      fullName.push(n);
-      lastIsParameter = false;
-    }
-  }
-  return {
-    fullName: name.blank().add(...fullName),
-    baseName: name.blank().add(...baseName),
-  };
 }
