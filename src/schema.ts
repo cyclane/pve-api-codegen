@@ -1,3 +1,13 @@
+/**
+ * Typescript type for the proxmox API JSON Schema, which
+ * is obtained from [pve-docs](https://git.proxmox.com/?p=pve-docs.git)/api-viewer/apidata.js .
+ *
+ * Docs are used instead of directly from pve-common to make
+ * sure built API clients can only access documented endpoints.
+ *
+ * However, [pve-common](https://git.proxmox.com/?p=pve-common.git)/src/PVE/JSONSchema.pm
+ * is useful when writing this type.
+ */
 export type Schema = Child[];
 
 export type Child = {

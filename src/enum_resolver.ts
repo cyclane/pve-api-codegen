@@ -47,7 +47,7 @@ export interface EnumResolver {
  */
 export function enumResolver(): EnumResolver {
   const enums: InnerEnum[] = [];
-  const adderPromises: Promise<unknown>[] = [];
+  const adderPromises: Promise<void>[] = [];
   return {
     newAdder: () => {
       const adder = async (names: NameBuilder[], values: string[]) => {
@@ -68,7 +68,7 @@ export function enumResolver(): EnumResolver {
       };
       adderPromises.push(
         new Promise((res) => {
-          adder.close = () => res(true);
+          adder.close = res;
         }),
       );
       return adder;

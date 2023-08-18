@@ -48,7 +48,7 @@ async function existsNotEmpty(path: string): Promise<string | undefined> {
 }
 
 async function main(args: typeof cliArgs) {
-  // console.debug = () => {}; // comment out for testing
+  // console.debug = () => {}; // remove comment for testing
   if (args.help || args._.length === 0) {
     console.log(`Proxmox API codegen
 
